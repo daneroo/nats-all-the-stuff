@@ -1,12 +1,17 @@
-import { NextPage } from "next"
-import Link from "next/link";
+import { NextPage } from 'next'
+import NextLink from 'next/link'
+import { Flex, Heading, Link } from '@chakra-ui/react'
 
 const AboutPage: NextPage = () => {
   return (
-    <>
-      <h1>About Next.js</h1>
-      <Link href="/">Go Home</Link>
-    </>
+    <Flex flexDirection='column' alignItems='center' margin={4}>
+      <Heading as='h1' size='2xl' marginBottom='2rem'>
+        About Next.js
+      </Heading>
+      <NextLink href='/' passHref>
+        <Link>Go Home</Link>
+      </NextLink>
+    </Flex>
   )
 }
 
