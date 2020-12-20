@@ -27,9 +27,6 @@ This is a lerna monorepo.
 
 ## Setup
 
-This is to bootstrap the 'site" package, which is a next.js/chakra-ui, for local development, deployment and vercel deployment.
-
 ```bash
 lerna init
-lerna create --private --license MIT --description '"Next.js/Chakra/Nats/Websocket demo"' site
 ```
