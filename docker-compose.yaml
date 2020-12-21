@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  nats:
+    # image: nats:2.XXXX
+    # Replaced this with nightly to get websockets, pin to version as soon as websockets are GA
+    image: synadia/nats-server:nightly
+    restart: unless-stopped
+    volumes:
+      - ./infra/config/nats/nats-server.conf:/nats/conf/nats-server.conf
+    ports:
+      # - '4222:4222' # for clients - port forwarded from router
+      # - '6222:6222' # routing port for clustering
+      # - '8222:8222' # for monitoring/reporting
+      - '9229:9222' # for websockets

@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import useInterval from '@use-it/interval'
 import { NextPage } from 'next'
 import NextLink from 'next/link'
 import { Flex, Heading, Link, SimpleGrid, Text } from '@chakra-ui/react'
@@ -6,21 +8,32 @@ import useSWR from 'swr'
 const fetcher = url => fetch(url).then(res => res.json())
 
 const ClockPage: NextPage = () => {
+  const delay = 1000
+  const [browserStamp, setBrowserStamp] = useState(new Date().toISOString())
+  useInterval(() => {
+    const stamp = new Date(Math.round(+new Date() / 100) * 100).toISOString()
+    setBrowserStamp(stamp)
+  }, delay)
   const { data, error } = useSWR(`/api/clock`, fetcher, {
-    refreshInterval: 100
+    refreshInterval: delay,
+    dedupingInterval: 100 // default os 2000
   })
   const content = error ? error.message : !data ? 'Loading' : data.stamp
   return (
     <Flex flexDirection='column' alignItems='center' margin={4}>
       <Heading as='h1' size='2xl' marginBottom='2rem'>
-        Clock
+        Clock - Current Time
       </Heading>
       <NextLink href='/' passHref>
         <Link>Go Home</Link>
       </NextLink>
       <SimpleGrid columns={2} width='large'>
         <Text fontWeight='bold' marginRight={4} align='right'>
-          Current Time
+          From Browser
+        </Text>
+        <Text>{browserStamp}</Text>
+        <Text fontWeight='bold' marginRight={4} align='right'>
+          From API (/api/clock)
         </Text>
         <Text>{content}</Text>
       </SimpleGrid>
