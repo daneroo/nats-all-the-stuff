@@ -17,6 +17,7 @@ export function Publish ({
       // console.log(`Connect to: ${wsurl}`)
       const nc = await connect({
         servers: wsurl,
+        name: 'demo.pub',
         pendingLimit: 8192
       })
 
@@ -74,6 +75,7 @@ function useSubscribe ({ wsurl, topic, maxRows, messages, setMessages }) {
       // console.log(`Connect to: ${wsurl}`)
       const nc = await connect({
         servers: wsurl,
+        name: 'demo.sub',
         pendingLimit: 8192
       })
       ncRef.current = nc

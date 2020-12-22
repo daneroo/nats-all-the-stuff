@@ -15,6 +15,7 @@ This is to bootstrap the 'site" package, which is a next.js/chakra-ui, for local
 ## Usage
 
 ```bash
+(cd ..; docker-compose up -d)
 npm run dev
 ```
 
