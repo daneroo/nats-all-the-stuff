@@ -10,12 +10,12 @@ import Document, {
 // We instantiated to add the <html lang='en' /> property
 
 class MyDocument extends Document {
-  static async getInitialProps (ctx: DocumentContext) {
+  static async getInitialProps (ctx: DocumentContext): Promise<DocumentInitialProps> {
     const initialProps = await Document.getInitialProps(ctx)
     return initialProps
   }
 
-  render () {
+  render (): void {
     return (
       <Html lang='en'>
         <Head />

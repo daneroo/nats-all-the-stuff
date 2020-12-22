@@ -4,11 +4,10 @@ This is to bootstrap the 'site" package, which is a next.js/chakra-ui, for local
 
 ## TODO
 
-- trying prettier-standard
 - Nats Context (for connection)
   - hooks for subscribe/publish
 - integrate dotenv (for wsurl,topic)
-- chakra-theme and Nav header - remove sx in Rows...
+- Clone Chakra docs for mdx+header..
 - remove moment in favor of date-fns
 - [NATS acronym](https://docs.nats.io/faq#what-does-the-nats-acronym-stand-for)
   - NATS stands for Neural Autonomic Transport System

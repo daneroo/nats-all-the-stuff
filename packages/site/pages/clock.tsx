@@ -5,7 +5,13 @@ import NextLink from 'next/link'
 import { Flex, Heading, Link, SimpleGrid, Text } from '@chakra-ui/react'
 import useSWR from 'swr'
 
-const fetcher = url => fetch(url).then(res => res.json())
+const fetcher = async function<JSON = any>(
+  input: RequestInfo,
+  init?: RequestInit
+): Promise<JSON> {
+  const res = await fetch(input, init)
+  return await res.json()
+}
 
 const ClockPage: NextPage = () => {
   const delay = 1000
@@ -14,11 +20,11 @@ const ClockPage: NextPage = () => {
     const stamp = new Date(Math.round(+new Date() / 100) * 100).toISOString()
     setBrowserStamp(stamp)
   }, delay)
-  const { data, error } = useSWR(`/api/clock`, fetcher, {
+  const { data, error } = useSWR<{stamp: string}, Error>('/api/clock', fetcher, {
     refreshInterval: delay,
     dedupingInterval: 100 // default os 2000
   })
-  const content = error ? error.message : !data ? 'Loading' : data.stamp
+  const content = error !== null ? error.message : data === null ? 'Loading' : data.stamp
   return (
     <Flex flexDirection='column' alignItems='center' margin={4}>
       <Heading as='h1' size='2xl' marginBottom='2rem'>

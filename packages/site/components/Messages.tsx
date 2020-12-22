@@ -1,9 +1,8 @@
 import { Table, Thead, Tbody, Tr, Th, Td, TableCaption } from '@chakra-ui/react'
+import { FC } from 'react'
 import { df } from './df'
 
-export function Messages ({ title, header, messages }) {
-  if (!messages) return <p>---</p>
-
+export function Messages ({ title, header, messages }: {title: string, header: string[], messages: Array<{stamp: sting}>}): FC {
   const rows = messages.map(msg => {
     const { stamp } = msg
     const row = [df(stamp, 'HH:mm:ss')]
@@ -11,7 +10,7 @@ export function Messages ({ title, header, messages }) {
   })
 
   return (
-    <Table minWidth='20rem' variant='simple' size='md'>
+    <Table minWidth='20rem' variant='simple' size='sm'>
       <TableCaption placement='top'>{title}</TableCaption>
       <Thead>
         <Tr>
@@ -21,14 +20,14 @@ export function Messages ({ title, header, messages }) {
         </Tr>
       </Thead>
       <Tbody>
-        <Rows rows={rows}></Rows>
+        <Rows rows={rows} />
       </Tbody>
     </Table>
   )
 }
 
 // using theme-ui and sx...
-function Rows ({ rows }) {
+function Rows ({ rows }): FC {
   return rows.map((row, r) => {
     return (
       <Tr key={r}>
