@@ -1,8 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react'
 import useInterval from '@use-it/interval'
 import { connect, JSONCodec } from 'nats.ws'
-import { df } from '../df'
-
+import { Messages } from '../Messages'
 // Currently: connect, publish, drain, close
 export function Publish ({
   wsurl = 'ws://localhost:9229',
@@ -15,14 +14,14 @@ export function Publish ({
     setMessages([msg])
 
     async function doAsync () {
-      console.log(`Connect to: ${wsurl}`)
+      // console.log(`Connect to: ${wsurl}`)
       const nc = await connect({
         servers: wsurl,
         pendingLimit: 8192
       })
 
       const jc = JSONCodec()
-      console.log(`Publish to: ${topic}`)
+      // console.log(`Publish to: ${topic}`)
       nc.publish(topic, jc.encode(msg))
       await nc.drain()
       nc.close()
@@ -31,8 +30,11 @@ export function Publish ({
   }, delay)
   return (
     <div>
-      <div>Publish ({wsurl})</div>
-      <MessagesLayout messages={messages} maxRows={1} />
+      <Messages
+        title={`Publish (${topic})`}
+        header={['stamp']}
+        messages={messages}
+      />
     </div>
   )
 }
@@ -47,9 +49,11 @@ export function Subscribe ({
 
   return (
     <div>
-      <div>Subscribe ({wsurl})</div>
-      {/* <pre>{JSON.stringify({ messages }, null, 2)}</pre> */}
-      <MessagesLayout messages={messages} maxRows={maxRows} />
+      <Messages
+        title={`Subscribe (${topic})`}
+        header={['stamp']}
+        messages={messages}
+      />
     </div>
   )
 }
@@ -67,7 +71,7 @@ function useSubscribe ({ wsurl, topic, maxRows, messages, setMessages }) {
 
   useEffect(() => {
     async function connectToNats () {
-      console.log(`Connect to: ${wsurl}`)
+      // console.log(`Connect to: ${wsurl}`)
       const nc = await connect({
         servers: wsurl,
         pendingLimit: 8192
@@ -75,7 +79,7 @@ function useSubscribe ({ wsurl, topic, maxRows, messages, setMessages }) {
       ncRef.current = nc
 
       const jc = JSONCodec()
-      console.log(`Subscribe to: ${topic}`)
+      // console.log(`Subscribe to: ${topic}`)
       const sub = nc.subscribe(topic, {})
       subRef.current = sub
       setTimeout(async () => {
@@ -96,48 +100,4 @@ function useSubscribe ({ wsurl, topic, maxRows, messages, setMessages }) {
       ncRef.current.close()
     }
   }, [wsurl, topic, maxRows]) // Make sure the effect runs only once
-}
-
-function MessagesLayout ({ messages, maxRows = 0 }) {
-  if (!messages) return <p>---</p>
-
-  const header = ['stamp']
-  const rows = [
-    header,
-    ...messages
-      .map(msg => {
-        // const { stamp, host, text } = msg
-        // const row = [df(stamp, 'HH:mm:ss'), host, text]
-        const { stamp } = msg
-        const row = [df(stamp, 'HH:mm:ss')]
-        return row
-      })
-      .slice(-maxRows)
-  ]
-
-  const gridCSS = {
-    display: 'grid',
-    columnGap: '1em',
-    gridTemplateColumns: `repeat(${header.length}, auto)`
-  }
-  return (
-    <div style={gridCSS}>
-      <Rows rows={rows} />
-    </div>
-  )
-}
-
-// using theme-ui and sx...
-function Rows ({ rows }) {
-  return rows.map((row, r) => {
-    const sx = r
-      ? { fontFamily: 'monospace' }
-      : { color: 'primary', fontWeight: 'bold' }
-    const rk = row[0]
-    return row.map((c, i) => (
-      <span sx={sx} key={rk + '-' + i}>
-        {c}
-      </span>
-    ))
-  })
 }
