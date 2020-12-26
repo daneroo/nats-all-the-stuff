@@ -11,5 +11,18 @@ services:
     ports:
       # - '4222:4222' # for clients - port forwarded from router
       # - '6222:6222' # routing port for clustering
-      - '8228:8222' # for monitoring/reporting
-      - '9229:9222' # for websockets
+      # now using proxy for cors bypass
+      # - '18222:8222' # for monitoring/reporting
+      - '19222:9222' # for websockets
+
+# Could use a proper dockerfile, for now just use base node image
+# CMD: npx local-cors-proxy --proxyUrl http://nats:8222 --port 18222 --proxyPartial '/'
+  proxy:
+    image: node:14-alpine
+    restart: unless-stopped
+    depends_on: 
+      - nats
+    ports:
+      - '18222:18222' # for monitoring/reporting
+    entrypoint: ''
+    command: "npx local-cors-proxy --proxyUrl http://nats:8222 --port 18222 --proxyPartial '/'"

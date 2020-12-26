@@ -4,14 +4,7 @@ import { NextPage } from 'next'
 import NextLink from 'next/link'
 import { Flex, Heading, Link, SimpleGrid, Text } from '@chakra-ui/react'
 import useSWR from 'swr'
-
-const fetcher = async function<JSON = any>(
-  input: RequestInfo,
-  init?: RequestInit
-): Promise<JSON> {
-  const res = await fetch(input, init)
-  return await res.json()
-}
+import { fetcher } from '../components/fetcher'
 
 const ClockPage: NextPage = () => {
   const delay = 1000

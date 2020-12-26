@@ -1,7 +1,7 @@
 import { NextPage } from 'next'
 import NextLink from 'next/link'
 import { Flex, Heading, Link } from '@chakra-ui/react'
-import { Publish, Subscribe } from '../components/nats/Nats'
+import { Publish, Subscribe, NTop } from '../components/nats/Nats'
 
 const IndexPage: NextPage = () => {
   return (
@@ -12,6 +12,7 @@ const IndexPage: NextPage = () => {
 
       <Publish />
       <Subscribe />
+      <NTop />
 
       <NextLink href='/about' passHref>
         <Link>Go to About</Link>
