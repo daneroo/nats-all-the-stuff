@@ -26,7 +26,6 @@ export function Messages ({ title, header, messages }: {title: string, header: s
   )
 }
 
-// using theme-ui and sx...
 function Rows ({ rows }): FC {
   return rows.map((row, r) => {
     return (

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import useSWR from 'swr'
 import { fetcher } from '../../components/fetcher'
 import {
@@ -23,7 +23,7 @@ export function NTop (): FC {
 function ConnZ ({ httpUrl = 'http://localhost:18222/connz?subs=1', delay = 1000 }): FC {
   const { data, error } = useSWR<any, Error>(httpUrl, fetcher, {
     refreshInterval: delay,
-    dedupingInterval: 100 // default os 2000
+    dedupingInterval: 100 // default is 2000
   })
   // const content = error !== null ? error.message : data === null ? 'Loading' : data.stamp
   if (error !== null && error !== undefined) {
@@ -90,7 +90,7 @@ function ConnZ ({ httpUrl = 'http://localhost:18222/connz?subs=1', delay = 1000 
   )
 }
 
-function VarZ ({ httpUrl = 'http://localhost:18222/varz', delay = 3000 }): FC {
+function VarZ ({ httpUrl = 'http://localhost:18222/varz', delay = 1000 }): FC {
   const { data, error } = useSWR<any, Error>(httpUrl, fetcher, {
     refreshInterval: delay,
     dedupingInterval: 100 // default os 2000
@@ -104,7 +104,7 @@ function VarZ ({ httpUrl = 'http://localhost:18222/varz', delay = 3000 }): FC {
   }
 
   const {
-    version, uptime, cpu, mem,
+    version, uptime, cpu, mem, now,
     in_msgs, out_msgs, in_bytes, out_bytes // eslint-disable-line @typescript-eslint/naming-convention
   } = data
   return (
@@ -122,36 +122,53 @@ function VarZ ({ httpUrl = 'http://localhost:18222/varz', delay = 3000 }): FC {
         </Stat>
         <Stat>
           <StatLabel>In Msgs</StatLabel>
-          <StatNumber>{printSize(in_msgs)}</StatNumber>
-          <StatHelpText>
-            Msgs/Sec: --
-          </StatHelpText>
+          <StatWithRate value={in_msgs} stamp={now} />
         </Stat>
         <Stat>
           <StatLabel>In Bytes</StatLabel>
-          <StatNumber>{printSize(in_bytes)}</StatNumber>
-          <StatHelpText>
-            Bytes/Sec: --
-          </StatHelpText>
+          <StatWithRate value={in_bytes} stamp={now} />
         </Stat>
 
         <Stat>
           <StatLabel>Out Msgs</StatLabel>
-          <StatNumber>{printSize(out_msgs)}</StatNumber>
-          <StatHelpText>
-            Msgs/Sec: --
-          </StatHelpText>
+          <StatWithRate value={out_msgs} stamp={now} />
         </Stat>
         <Stat>
           <StatLabel>Out Bytes</StatLabel>
-          <StatNumber>{printSize(out_bytes)}</StatNumber>
-          <StatHelpText>
-            Bytes/Sec: --
-          </StatHelpText>
+          <StatWithRate value={out_bytes} stamp={now} />
         </Stat>
       </StatGroup>
     </>
   )
+}
+
+function StatWithRate ({ value = 0, stamp = '' }: {value: number, stamp: string}): FC {
+  const rate = useRateForMetric({ value, stamp })
+  return (
+    <>
+      <StatNumber>{printSize(value)}</StatNumber>
+      <StatHelpText>
+        rate: {printSize(rate)}/s
+      </StatHelpText>
+    </>
+  )
+}
+
+function useRateForMetric ({ value = 0, stamp = '' }: {value: number, stamp: string}): FC {
+  const prevValueRef = useRef()
+  const prevStampRef = useRef()
+
+  // This gets triggered after (each) render
+  useEffect(() => {
+    prevValueRef.current = value
+    prevStampRef.current = stamp
+    return () => { }
+  }) // depends on [value, now] which is the default
+
+  const delta = value - prevValueRef.current
+  const deltaT = (+new Date(stamp) - new Date(prevStampRef.current)) / 1000
+  const rate = delta / deltaT
+  return [rate]
 }
 
 function printSize (size: number): string {
