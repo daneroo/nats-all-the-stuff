@@ -17,7 +17,14 @@ const ClockPage: NextPage = () => {
     refreshInterval: delay,
     dedupingInterval: 100 // default os 2000
   })
-  const content = error !== null ? error.message : data === null ? 'Loading' : data.stamp
+  var content
+  if (error !== null && error !== undefined) {
+    content = `Error: ${error.message}`
+  } else if (data === null || data === undefined) {
+    content = 'Loading...'
+  } else {
+    content = data.stamp
+  }
   return (
     <Flex flexDirection='column' alignItems='center' margin={4}>
       <Heading as='h1' size='2xl' marginBottom='2rem'>

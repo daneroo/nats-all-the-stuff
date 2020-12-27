@@ -2,26 +2,6 @@ import React, { useRef, useEffect, useState } from 'react'
 import useInterval from '@use-it/interval'
 import { connect, JSONCodec } from 'nats.ws'
 import { Messages } from '../Messages'
-import useSWR from 'swr'
-import { fetcher } from '../../components/fetcher'
-
-// use the local proxy to bypass cors
-// ?subs=1 -> get subscriptions
-export function NTop ({ httpUrl = 'http://localhost:18222/connz?subs=1', delay = 2000 }): FC {
-  const { data, error } = useSWR<any, Error>(httpUrl, fetcher, {
-    refreshInterval: delay,
-    dedupingInterval: 100 // default os 2000
-  })
-  // const content = error !== null ? error.message : data === null ? 'Loading' : data.stamp
-  if (error !== null && error !== undefined) {
-    return <pre>Error: {error.message}</pre>
-  }
-  if (data === null || data === undefined) {
-    return <pre>Loading...</pre>
-  }
-
-  return <pre>{JSON.stringify(data, null, 2)}</pre>
-}
 
 // Currently: connect, publish, drain, close
 export function Publish ({

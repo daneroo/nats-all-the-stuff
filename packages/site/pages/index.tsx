@@ -1,7 +1,9 @@
 import { NextPage } from 'next'
 import NextLink from 'next/link'
-import { Flex, Heading, Link } from '@chakra-ui/react'
-import { Publish, Subscribe, NTop } from '../components/nats/Nats'
+import { Flex, Heading, Link, Stack, Box } from '@chakra-ui/react'
+
+import { Publish, Subscribe } from '../components/nats/Nats'
+import { NTop } from '../components/nats/NTop'
 
 const IndexPage: NextPage = () => {
   return (
@@ -10,8 +12,15 @@ const IndexPage: NextPage = () => {
         NATS.ws Example
       </Heading>
 
-      <Publish />
-      <Subscribe />
+      <Stack direction='row' marginBottom='1rem'>
+        <Box p={3} shadow='md' borderRadius='md' borderWidth='1px'>
+
+          <Publish />
+        </Box>
+        <Box p={3} shadow='md' borderRadius='md' borderWidth='1px'>
+          <Subscribe />
+        </Box>
+      </Stack>
       <NTop />
 
       <NextLink href='/about' passHref>
