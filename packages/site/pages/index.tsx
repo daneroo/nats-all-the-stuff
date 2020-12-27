@@ -22,12 +22,14 @@ const IndexPage: NextPage = () => {
       </Stack>
       <NTop />
 
-      <NextLink href='/about' passHref>
-        <Link>Go to About</Link>
-      </NextLink>
-      <NextLink href='/clock' passHref>
-        <Link>Go to Clock</Link>
-      </NextLink>
+      <Stack direction='row' marginTop='1rem'>
+        <NextLink href='/about' passHref>
+          <Link>Go to About</Link>
+        </NextLink>
+        <NextLink href='/clock' passHref>
+          <Link>Go to Clock</Link>
+        </NextLink>
+      </Stack>
     </Flex>
   )
 }
