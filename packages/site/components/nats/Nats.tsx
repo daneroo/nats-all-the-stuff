@@ -1,15 +1,17 @@
-import React, { useRef, useEffect, useState, useContext } from 'react'
+import React, { useRef, useEffect, useState, useContext, FC } from 'react'
 import useInterval from '@use-it/interval'
 import { connect, JSONCodec, NatsConnection, Subscription } from 'nats.ws'
 import { Messages } from '../Messages'
 
-export function Publish ({
-  topic = 'nats.demo.clock',
-  delay = 1000
-}: {
+interface PublishProps {
   topic?: string
   delay?: number
-}): JSX.Element {
+}
+
+export const Publish: FC<PublishProps> = ({
+  topic = 'nats.demo.clock',
+  delay = 1000
+}) => {
   const { nc } = useContext(NatsContext)
   const [messages, setMessages] = useState<Array<{stamp: string}>>([])
   const jc = JSONCodec()
@@ -32,13 +34,15 @@ export function Publish ({
   )
 }
 
-export function Subscribe ({
-  topic = 'nats.demo.clock',
-  maxRows = 4
-}: {
+interface SubscribeProps {
   topic?: string
   maxRows?: number
-}): JSX.Element {
+}
+
+export const Subscribe: FC<SubscribeProps> = ({
+  topic = 'nats.demo.clock',
+  maxRows = 4
+}) => {
   const [messages, setMessages] = useState<Array<{stamp: string}>>([])
   useSubscribe({ topic, maxRows, messages, setMessages })
 
@@ -53,12 +57,14 @@ export function Subscribe ({
   )
 }
 
-function useSubscribe ({ topic, maxRows, messages, setMessages }: {
+interface useSubscribeProps {
   topic: string
   maxRows: number
   messages: Array<{stamp: string}>
   setMessages: React.Dispatch<React.SetStateAction<Array<{ stamp: string }>>>
-}): void {
+}
+
+function useSubscribe ({ topic, maxRows, messages, setMessages }: useSubscribeProps): void {
   const { nc } = useContext(NatsContext)
   const subRef = useRef<Subscription|null>(null)
   const messagesRef = useRef(messages)
@@ -82,7 +88,6 @@ function useSubscribe ({ topic, maxRows, messages, setMessages }: {
         (async (): Promise<void> => {
           for await (const m of sub) {
             const jm = jc.decode(m.data)
-            // setMessagesRef.current([...messagesRef.current, jm].slice(-maxRows))
             setMessagesRef.current([jm, ...messagesRef.current].slice(0, maxRows))
           }
         })().catch(() => {})
@@ -101,11 +106,17 @@ function useSubscribe ({ topic, maxRows, messages, setMessages }: {
 
 const NatsContext = React.createContext<{nc: NatsConnection|null}>({ nc: null })
 
-export function NatsProvider ({
+interface NatsProviderProps {
+  wsurl?: string
+  name?: string
+  // children?: React.ReactNode
+}
+
+export const NatsProvider: FC<NatsProviderProps> = ({
   wsurl = 'ws://localhost:19222',
   name = 'unnamed',
   children
-}: { wsurl?: string, name: string, children: any}): any {
+}) => {
   const [nc, setNc] = useState<NatsConnection|null>(null)
   useEffect(() => {
     let nc
