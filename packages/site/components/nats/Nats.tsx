@@ -44,7 +44,10 @@ export const Subscribe: FC<SubscribeProps> = ({
   maxRows = 4
 }) => {
   const [messages, setMessages] = useState<Array<{stamp: string}>>([])
-  useSubscribe({ topic, maxRows, messages, setMessages })
+  function callback (msg: {stamp: string}): void {
+    setMessages([msg, ...messages].slice(0, maxRows))
+  }
+  useSubscribe({ topic, callback })
 
   return (
     <div>
@@ -59,36 +62,32 @@ export const Subscribe: FC<SubscribeProps> = ({
 
 interface useSubscribeProps {
   topic: string
-  maxRows: number
-  messages: Array<{stamp: string}>
-  setMessages: React.Dispatch<React.SetStateAction<Array<{ stamp: string }>>>
+  callback: (msg: {stamp: string}) => void
 }
 
-function useSubscribe ({ topic, maxRows, messages, setMessages }: useSubscribeProps): void {
+function useSubscribe ({ topic, callback }: useSubscribeProps): void {
   const { nc } = useContext(NatsContext)
   const subRef = useRef<Subscription|null>(null)
-  const messagesRef = useRef(messages)
-  const setMessagesRef = useRef(setMessages)
+  const callbackRef = useRef(callback)
 
   useEffect(() => {
-    messagesRef.current = messages
-    setMessagesRef.current = setMessages
-  }, [messages, setMessages])
+    callbackRef.current = callback
+  }, [callback])
 
   useEffect(() => {
     async function subscribeAndConsume (): Promise<void> {
-      const jc = JSONCodec()
-      // console.log(`Subscribe to: ${topic}`)
       if (nc === null) {
         return
       }
+      const jc = JSONCodec()
+      // console.log(`Subscribe to: ${topic}`)
       const sub = nc.subscribe(topic, {})
       subRef.current = sub
       setTimeout(() => {
         (async (): Promise<void> => {
           for await (const m of sub) {
             const jm = jc.decode(m.data)
-            setMessagesRef.current([jm, ...messagesRef.current].slice(0, maxRows))
+            callbackRef.current(jm)
           }
         })().catch(() => {})
       }, 0)
@@ -101,7 +100,7 @@ function useSubscribe ({ topic, maxRows, messages, setMessages }: useSubscribePr
         subRef.current.unsubscribe(0)
       }
     }
-  }, [nc, topic, maxRows]) // Make sure the effect runs only once
+  }, [nc, topic]) // Make sure the effect runs only once
 }
 
 const NatsContext = React.createContext<{nc: NatsConnection|null}>({ nc: null })
