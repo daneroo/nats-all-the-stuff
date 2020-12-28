@@ -2,7 +2,7 @@ import { NextPage } from 'next'
 import NextLink from 'next/link'
 import { Flex, Heading, Link, Stack, Box } from '@chakra-ui/react'
 
-import { Publish, Subscribe, NatsProvider, Thing } from '../components/nats/Nats'
+import { Publish, Subscribe, NatsProvider } from '../components/nats/Nats'
 import { NTop } from '../components/nats/NTop'
 
 const IndexPage: NextPage = () => {

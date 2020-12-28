@@ -11,7 +11,7 @@ import { df } from '../df'
 // use the local proxy to bypass cors
 // ?subs=1 -> get subscriptions
 
-export function NTop (): FC {
+export function NTop (): JSX.Element {
   return (
     <Box p={3} shadow='md' borderRadius='md' borderWidth='1px'>
       <VarZ />
@@ -20,7 +20,7 @@ export function NTop (): FC {
   )
 }
 
-function ConnZ ({ httpUrl = 'http://localhost:18222/connz?subs=1', delay = 1000 }): FC {
+function ConnZ ({ httpUrl = 'http://localhost:18222/connz?subs=1', delay = 1000 }): JSX.Element {
   const { data, error } = useSWR<any, Error>(httpUrl, fetcher, {
     refreshInterval: delay,
     dedupingInterval: 100 // default is 2000
@@ -90,7 +90,7 @@ function ConnZ ({ httpUrl = 'http://localhost:18222/connz?subs=1', delay = 1000 
   )
 }
 
-function VarZ ({ httpUrl = 'http://localhost:18222/varz', delay = 1000 }): FC {
+function VarZ ({ httpUrl = 'http://localhost:18222/varz', delay = 1000 }): JSX.Element {
   const { data, error } = useSWR<any, Error>(httpUrl, fetcher, {
     refreshInterval: delay,
     dedupingInterval: 100 // default os 2000
@@ -142,7 +142,8 @@ function VarZ ({ httpUrl = 'http://localhost:18222/varz', delay = 1000 }): FC {
   )
 }
 
-function StatWithRate ({ value = 0, stamp = '' }: {value: number, stamp: string}): FC {
+// TODO(daneroo): make value,stamp a type
+function StatWithRate ({ value = 0, stamp = '' }: {value: number, stamp: string}): JSX.Element {
   const rate = useRateForMetric({ value, stamp })
   return (
     <>
@@ -154,25 +155,27 @@ function StatWithRate ({ value = 0, stamp = '' }: {value: number, stamp: string}
   )
 }
 
-function useRateForMetric ({ value = 0, stamp = '' }: {value: number, stamp: string}): FC {
-  const prevValueRef = useRef()
-  const prevStampRef = useRef()
+function useRateForMetric ({ value = 0, stamp = '' }: {value: number, stamp: string}): number {
+  const prevValueRef = useRef<number|null>(null)
+  const prevStampRef = useRef<string|null>(null)
 
-  // This gets triggered after (each) render
+  // This gets triggered _after_ (each) render
   useEffect(() => {
     prevValueRef.current = value
     prevStampRef.current = stamp
-    return () => { }
   }) // depends on [value, now] which is the default
 
+  // restrict refs to non-nulls
+  if (prevValueRef.current === null || prevStampRef.current === null) {
+    return NaN
+  }
   const delta = value - prevValueRef.current
-  const deltaT = (+new Date(stamp) - new Date(prevStampRef.current)) / 1000
+  const deltaT = (+new Date(stamp) - +new Date(prevStampRef.current)) / 1000
   const rate = delta / deltaT
-  return [rate]
+  return rate
 }
 
 function printSize (size: number): string {
-  size = Number.parseFloat(size)
   if (size < 1024) {
     return size.toFixed(0)
   } else if (size < (1024 * 1024)) {

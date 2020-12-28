@@ -1,5 +1,6 @@
 import Document, {
   DocumentContext,
+  DocumentInitialProps,
   Head,
   Html,
   Main,
@@ -15,7 +16,7 @@ class MyDocument extends Document {
     return initialProps
   }
 
-  render (): void {
+  render (): JSX.Element {
     return (
       <Html lang='en'>
         <Head />

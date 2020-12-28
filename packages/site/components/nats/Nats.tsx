@@ -1,24 +1,26 @@
-import React, { useRef, useEffect, useState, useContext, FC } from 'react'
+import React, { useRef, useEffect, useState, useContext } from 'react'
 import useInterval from '@use-it/interval'
-import { connect, JSONCodec } from 'nats.ws'
+import { connect, JSONCodec, NatsConnection, Subscription } from 'nats.ws'
 import { Messages } from '../Messages'
 
 export function Publish ({
   topic = 'nats.demo.clock',
   delay = 1000
-}): FC {
+}: {
+  topic?: string
+  delay?: number
+}): JSX.Element {
   const { nc } = useContext(NatsContext)
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState<Array<{stamp: string}>>([])
   const jc = JSONCodec()
+
   useInterval(() => {
     const msg = { stamp: new Date().toISOString() }
     setMessages([msg])
-
-    nc.publish(topic, jc.encode(msg))
+    if (nc !== null) {
+      nc.publish(topic, jc.encode(msg))
+    }
   }, delay)
-  if (nc === null || nc === undefined) {
-    return <div>Connecting...</div>
-  }
   return (
     <div>
       <Messages
@@ -31,12 +33,14 @@ export function Publish ({
 }
 
 export function Subscribe ({
-  wsurl = 'ws://localhost:19222',
   topic = 'nats.demo.clock',
   maxRows = 4
-}): FC {
-  const [messages, setMessages] = useState([])
-  useSubscribe({ wsurl, topic, maxRows, messages, setMessages })
+}: {
+  topic?: string
+  maxRows?: number
+}): JSX.Element {
+  const [messages, setMessages] = useState<Array<{stamp: string}>>([])
+  useSubscribe({ topic, maxRows, messages, setMessages })
 
   return (
     <div>
@@ -49,9 +53,14 @@ export function Subscribe ({
   )
 }
 
-function useSubscribe ({ topic, maxRows, messages, setMessages }: { wsurl: string, topic: string, maxRows: number}): void {
+function useSubscribe ({ topic, maxRows, messages, setMessages }: {
+  topic: string
+  maxRows: number
+  messages: Array<{stamp: string}>
+  setMessages: React.Dispatch<React.SetStateAction<Array<{ stamp: string }>>>
+}): void {
   const { nc } = useContext(NatsContext)
-  const subRef = useRef(null)
+  const subRef = useRef<Subscription|null>(null)
   const messagesRef = useRef(messages)
   const setMessagesRef = useRef(setMessages)
 
@@ -61,7 +70,7 @@ function useSubscribe ({ topic, maxRows, messages, setMessages }: { wsurl: strin
   }, [messages, setMessages])
 
   useEffect(() => {
-    async function subscribeAndConsume (): void {
+    async function subscribeAndConsume (): Promise<void> {
       const jc = JSONCodec()
       // console.log(`Subscribe to: ${topic}`)
       if (nc === null) {
@@ -70,16 +79,16 @@ function useSubscribe ({ topic, maxRows, messages, setMessages }: { wsurl: strin
       const sub = nc.subscribe(topic, {})
       subRef.current = sub
       setTimeout(() => {
-        (async (): void => {
+        (async (): Promise<void> => {
           for await (const m of sub) {
             const jm = jc.decode(m.data)
             // setMessagesRef.current([...messagesRef.current, jm].slice(-maxRows))
             setMessagesRef.current([jm, ...messagesRef.current].slice(0, maxRows))
           }
-        })()
+        })().catch(() => {})
       }, 0)
     }
-    subscribeAndConsume()
+    subscribeAndConsume().catch(() => {})
 
     return () => {
       if (subRef.current !== null) {
@@ -90,16 +99,17 @@ function useSubscribe ({ topic, maxRows, messages, setMessages }: { wsurl: strin
   }, [nc, topic, maxRows]) // Make sure the effect runs only once
 }
 
-const NatsContext = React.createContext()
+const NatsContext = React.createContext<{nc: NatsConnection|null}>({ nc: null })
 
 export function NatsProvider ({
   wsurl = 'ws://localhost:19222',
-  name = 'unnamed', children
-}: { wsurl: string, name: string}): FC {
-  const [nc, setNc] = useState(null)
+  name = 'unnamed',
+  children
+}: { wsurl?: string, name: string, children: any}): any {
+  const [nc, setNc] = useState<NatsConnection|null>(null)
   useEffect(() => {
     let nc
-    async function connectToNats (): void {
+    async function connectToNats (): Promise<void> {
       console.log(`Connect to: ${name}:${wsurl}`)
       nc = await connect({
         servers: wsurl,
@@ -111,14 +121,17 @@ export function NatsProvider ({
       setNc(nc)
       console.log(`Connected to: ${name}:${wsurl}`)
     }
-    connectToNats()
+    connectToNats().catch(() => {})
 
-    return async () => {
-      console.log(`Disconnect from: ${name}:${wsurl}`)
-      if (nc !== undefined && nc !== null) {
-        await nc.drain()
-        await nc.close()
+    return () => {
+      async function cleanup (): Promise<void> {
+        console.log(`Disconnect from: ${name}:${wsurl}`)
+        if (nc !== undefined && nc !== null) {
+          await nc.drain()
+          await nc.close()
+        }
       }
+      cleanup().catch(() => {})
     }
   }, [wsurl, name]) // Make sure the effect runs only once
 

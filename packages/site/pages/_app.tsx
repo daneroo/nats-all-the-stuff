@@ -2,7 +2,7 @@ import { AppProps } from 'next/app'
 import Head from 'next/Head'
 import { ChakraProvider } from '@chakra-ui/react'
 
-const App = ({ Component, pageProps }: AppProps): FC => {
+const App = ({ Component, pageProps }: AppProps): JSX.Element => {
   return (
     <ChakraProvider>
       <Head>
