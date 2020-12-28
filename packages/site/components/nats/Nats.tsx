@@ -1,35 +1,24 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, useContext, FC } from 'react'
 import useInterval from '@use-it/interval'
 import { connect, JSONCodec } from 'nats.ws'
 import { Messages } from '../Messages'
 
-// Currently: connect, publish, drain, close
 export function Publish ({
-  wsurl = 'ws://localhost:19222',
   topic = 'nats.demo.clock',
   delay = 1000
 }): FC {
+  const { nc } = useContext(NatsContext)
   const [messages, setMessages] = useState([])
+  const jc = JSONCodec()
   useInterval(() => {
     const msg = { stamp: new Date().toISOString() }
     setMessages([msg])
 
-    async function doAsync (): void {
-      // console.log(`Connect to: ${wsurl}`)
-      const nc = await connect({
-        servers: wsurl,
-        name: 'demo.pub',
-        pendingLimit: 8192
-      })
-
-      const jc = JSONCodec()
-      // console.log(`Publish to: ${topic}`)
-      nc.publish(topic, jc.encode(msg))
-      await nc.drain()
-      await nc.close()
-    }
-    doAsync()
+    nc.publish(topic, jc.encode(msg))
   }, delay)
+  if (nc === null || nc === undefined) {
+    return <div>Connecting...</div>
+  }
   return (
     <div>
       <Messages
@@ -60,8 +49,8 @@ export function Subscribe ({
   )
 }
 
-function useSubscribe ({ wsurl, topic, maxRows, messages, setMessages }: { wsurl: string, topic: string, maxRows: number}): void {
-  const ncRef = useRef(null)
+function useSubscribe ({ topic, maxRows, messages, setMessages }: { wsurl: string, topic: string, maxRows: number}): void {
+  const { nc } = useContext(NatsContext)
   const subRef = useRef(null)
   const messagesRef = useRef(messages)
   const setMessagesRef = useRef(setMessages)
@@ -72,17 +61,12 @@ function useSubscribe ({ wsurl, topic, maxRows, messages, setMessages }: { wsurl
   }, [messages, setMessages])
 
   useEffect(() => {
-    async function connectToNats (): void {
-      // console.log(`Connect to: ${wsurl}`)
-      const nc = await connect({
-        servers: wsurl,
-        name: 'demo.sub',
-        pendingLimit: 8192
-      })
-      ncRef.current = nc
-
+    async function subscribeAndConsume (): void {
       const jc = JSONCodec()
       // console.log(`Subscribe to: ${topic}`)
+      if (nc === null) {
+        return
+      }
       const sub = nc.subscribe(topic, {})
       subRef.current = sub
       setTimeout(() => {
@@ -95,14 +79,52 @@ function useSubscribe ({ wsurl, topic, maxRows, messages, setMessages }: { wsurl
         })()
       }, 0)
     }
-    connectToNats()
+    subscribeAndConsume()
 
     return () => {
-      console.log(`Unsubscribe from: ${topic}`)
-      subRef.current.unsubscribe(0)
-
-      console.log(`Disconnect from: ${wsurl}`)
-      ncRef.current.close()
+      if (subRef.current !== null) {
+        console.log(`Unsubscribe from: ${topic}`)
+        subRef.current.unsubscribe(0)
+      }
     }
-  }, [wsurl, topic, maxRows]) // Make sure the effect runs only once
+  }, [nc, topic, maxRows]) // Make sure the effect runs only once
+}
+
+const NatsContext = React.createContext()
+
+export function NatsProvider ({
+  wsurl = 'ws://localhost:19222',
+  name = 'unnamed', children
+}: { wsurl: string, name: string}): FC {
+  const [nc, setNc] = useState(null)
+  useEffect(() => {
+    let nc
+    async function connectToNats (): void {
+      console.log(`Connect to: ${name}:${wsurl}`)
+      nc = await connect({
+        servers: wsurl,
+        name,
+        // pendingLimit: 8192, // not sure, came from a demo
+        waitOnFirstConnect: true,
+        maxReconnectAttempts: -1 // no limit
+      })
+      setNc(nc)
+      console.log(`Connected to: ${name}:${wsurl}`)
+    }
+    connectToNats()
+
+    return async () => {
+      console.log(`Disconnect from: ${name}:${wsurl}`)
+      if (nc !== undefined && nc !== null) {
+        await nc.drain()
+        await nc.close()
+      }
+    }
+  }, [wsurl, name]) // Make sure the effect runs only once
+
+  return (
+    <NatsContext.Provider value={{ nc }}>
+      {children}
+    </NatsContext.Provider>
+  )
 }
