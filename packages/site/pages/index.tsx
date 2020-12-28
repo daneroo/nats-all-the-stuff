@@ -15,18 +15,18 @@ const IndexPage: NextPage = () => {
       <Stack direction='row' marginBottom='1rem'>
         <Box p={3} shadow='md' borderRadius='md' borderWidth='1px'>
           <NatsProvider name='demo.pub'>
-            <Publish />
+            <Publish name='Publisher' />
           </NatsProvider>
         </Box>
         <Box p={3} shadow='md' borderRadius='md' borderWidth='1px'>
           <NatsProvider name='demo.sub-1'>
-            <Subscribe />
+            <Subscribe name='Subscriber 1' />
           </NatsProvider>
         </Box>
 
         <Box p={3} shadow='md' borderRadius='md' borderWidth='1px'>
           <NatsProvider name='demo.sub-2'>
-            <Subscribe />
+            <Subscribe name='Subscriber 2' />
           </NatsProvider>
         </Box>
 

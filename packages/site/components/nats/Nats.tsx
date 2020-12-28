@@ -4,16 +4,18 @@ import { connect, JSONCodec, NatsConnection, Subscription } from 'nats.ws'
 import { Messages } from '../Messages'
 
 interface PublishProps {
+  name: string
   topic?: string
   delay?: number
 }
 
 export const Publish: FC<PublishProps> = ({
+  name = 'Publisher',
   topic = 'nats.demo.clock',
   delay = 1000
 }) => {
   const { nc } = useContext(NatsContext)
-  const [messages, setMessages] = useState<Array<{stamp: string}>>([])
+  const [messages, setMessages] = useState<Array<{ stamp: string }>>([])
   const jc = JSONCodec()
 
   useInterval(() => {
@@ -26,7 +28,7 @@ export const Publish: FC<PublishProps> = ({
   return (
     <div>
       <Messages
-        title={`Publish (${topic})`}
+        title={`${name} (${topic})`}
         header={['stamp']}
         messages={messages}
       />
@@ -35,15 +37,17 @@ export const Publish: FC<PublishProps> = ({
 }
 
 interface SubscribeProps {
+  name: string
   topic?: string
   maxRows?: number
 }
 
 export const Subscribe: FC<SubscribeProps> = ({
+  name = 'Subscriber',
   topic = 'nats.demo.clock',
   maxRows = 4
 }) => {
-  function accumulatingReducer (messages: Array<{stamp: string}>, msg: {stamp: string}): Array<{stamp: string}> {
+  function accumulatingReducer (messages: Array<{ stamp: string }>, msg: { stamp: string }): Array<{ stamp: string }> {
     return [msg, ...messages].slice(0, maxRows)
   }
   const [messages, dispatch] = useReducer(accumulatingReducer, [])
@@ -52,7 +56,7 @@ export const Subscribe: FC<SubscribeProps> = ({
   return (
     <div>
       <Messages
-        title={`Subscribe (${topic})`}
+        title={`${name} (${topic})`}
         header={['stamp']}
         messages={messages}
       />
@@ -67,7 +71,7 @@ interface useSubscribeProps {
 
 function useSubscribe ({ topic, dispatch }: useSubscribeProps): void {
   const { nc } = useContext(NatsContext)
-  const subRef = useRef<Subscription|null>(null)
+  const subRef = useRef<Subscription | null>(null)
 
   async function consumeUntilDone (sub, dispatch): Promise<void> {
     const jc = JSONCodec()
@@ -96,7 +100,7 @@ function useSubscribe ({ topic, dispatch }: useSubscribeProps): void {
 
     // keep the reference for the cleanup function
     subRef.current = sub
-    consumeUntilDone(sub, dispatch).catch(() => {})
+    consumeUntilDone(sub, dispatch).catch(() => { })
 
     // This is the cleanup function
     return () => {
@@ -109,7 +113,7 @@ function useSubscribe ({ topic, dispatch }: useSubscribeProps): void {
   }, [nc, topic]) // Make sure the effect runs only once
 }
 
-const NatsContext = React.createContext<{nc: NatsConnection|null}>({ nc: null })
+const NatsContext = React.createContext<{ nc: NatsConnection | null }>({ nc: null })
 
 interface NatsProviderProps {
   wsurl?: string
@@ -122,7 +126,7 @@ export const NatsProvider: FC<NatsProviderProps> = ({
   name = 'unnamed',
   children
 }) => {
-  const [nc, setNc] = useState<NatsConnection|null>(null)
+  const [nc, setNc] = useState<NatsConnection | null>(null)
   useEffect(() => {
     let nc
     async function connectToNats (): Promise<void> {
@@ -137,7 +141,7 @@ export const NatsProvider: FC<NatsProviderProps> = ({
       setNc(nc)
       console.log(`Connected to: ${name}:${wsurl}`)
     }
-    connectToNats().catch(() => {})
+    connectToNats().catch(() => { })
 
     return () => {
       async function cleanup (): Promise<void> {
@@ -147,7 +151,7 @@ export const NatsProvider: FC<NatsProviderProps> = ({
           await nc.close()
         }
       }
-      cleanup().catch(() => {})
+      cleanup().catch(() => { })
     }
   }, [wsurl, name]) // Make sure the effect runs only once
 
