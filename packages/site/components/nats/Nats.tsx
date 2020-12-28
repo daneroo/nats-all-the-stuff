@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useContext, FC } from 'react'
+import React, { useRef, useEffect, useState, useContext, useReducer, FC } from 'react'
 import useInterval from '@use-it/interval'
 import { connect, JSONCodec, NatsConnection, Subscription } from 'nats.ws'
 import { Messages } from '../Messages'
@@ -43,11 +43,11 @@ export const Subscribe: FC<SubscribeProps> = ({
   topic = 'nats.demo.clock',
   maxRows = 4
 }) => {
-  const [messages, setMessages] = useState<Array<{stamp: string}>>([])
-  function callback (msg: {stamp: string}): void {
-    setMessages([msg, ...messages].slice(0, maxRows))
+  function accumulatingReducer (messages: Array<{stamp: string}>, msg: {stamp: string}): Array<{stamp: string}> {
+    return [msg, ...messages].slice(0, maxRows)
   }
-  useSubscribe({ topic, callback })
+  const [messages, dispatch] = useReducer(accumulatingReducer, [])
+  useSubscribe({ topic, dispatch })
 
   return (
     <div>
@@ -62,42 +62,48 @@ export const Subscribe: FC<SubscribeProps> = ({
 
 interface useSubscribeProps {
   topic: string
-  callback: (msg: {stamp: string}) => void
+  dispatch: React.Dispatch<{ stamp: string }>
 }
 
-function useSubscribe ({ topic, callback }: useSubscribeProps): void {
+function useSubscribe ({ topic, dispatch }: useSubscribeProps): void {
   const { nc } = useContext(NatsContext)
   const subRef = useRef<Subscription|null>(null)
-  const callbackRef = useRef(callback)
 
-  useEffect(() => {
-    callbackRef.current = callback
-  }, [callback])
-
-  useEffect(() => {
-    async function subscribeAndConsume (): Promise<void> {
-      if (nc === null) {
-        return
-      }
-      const jc = JSONCodec()
-      // console.log(`Subscribe to: ${topic}`)
-      const sub = nc.subscribe(topic, {})
-      subRef.current = sub
-      setTimeout(() => {
-        (async (): Promise<void> => {
-          for await (const m of sub) {
-            const jm = jc.decode(m.data)
-            callbackRef.current(jm)
-          }
-        })().catch(() => {})
-      }, 0)
+  async function consumeUntilDone (sub, dispatch): Promise<void> {
+    const jc = JSONCodec()
+    for await (const m of sub) {
+      const msg = jc.decode(m.data)
+      dispatch(msg)
     }
-    subscribeAndConsume().catch(() => {})
+  }
 
+  useEffect(() => {
+    // Check if the connection is in a state to add a subscription
+    //  if not: early return
+    if (nc === null || nc.isClosed() || nc.isDraining()) {
+      // if (nc === null) {
+      //   console.log('early abort, nc is null')
+      // } else if (nc.isClosed()) {
+      //   console.log('early abort, nc is closed')
+      // } else if (nc.isDraining()) {
+      //   console.log('early abort, nc is draining')
+      // }
+      return
+    }
+
+    // console.log(`Subscribe to: ${topic}`)
+    const sub = nc.subscribe(topic, {})
+
+    // keep the reference for the cleanup function
+    subRef.current = sub
+    consumeUntilDone(sub, dispatch).catch(() => {})
+
+    // This is the cleanup function
     return () => {
       if (subRef.current !== null) {
         console.log(`Unsubscribe from: ${topic}`)
         subRef.current.unsubscribe(0)
+        subRef.current = null
       }
     }
   }, [nc, topic]) // Make sure the effect runs only once
