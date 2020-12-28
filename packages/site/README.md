@@ -4,9 +4,9 @@ This is to bootstrap the 'site" package, which is a next.js/chakra-ui, for local
 
 ## TODO
 
-- Nats Context (for connection)
-  - hooks for subscribe/publish
-- integrate dotenv (for wsurl,topic)
+- Replace lcp proxy with API routes?
+- Parametrize table type for chakra table, use for ConnZ and Messages
+- integrate dotenv (for wsurl,topic?)
 - Clone Chakra docs for mdx+header..
 - remove moment in favor of date-fns
 - [NATS acronym](https://docs.nats.io/faq#what-does-the-nats-acronym-stand-for)
