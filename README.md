@@ -1,22 +1,28 @@
 # Nats All The Stuff
 
-Combined experiments around [nats](https://nats.io/), with websocket support
+Experiments using [NATS](https://nats.io/), with websocket support, and [Next.js](https://nextjs.org/)
 
-This is a lerna monorepo.
+![NATS.ws-Next.js](NATS.ws-Next.js-annotated.gif "NATS.ws-Next.js")
 
-## TODO
+The code is organized as a lerna monorepo.
 
-- lerna setup
-- next.js + chakra 
-- nats.ws
-- docker-compose + e2e
+## Usage
+
+```bash
+docker-compose up -d
+cd packages/site
+npm install
+npm run dev  # for live development
+# or
+npm run build && npm start # for production (like) build
+```
 
 ## Patterns
 
-- auth
 - pub/sub
 - req/resp
 - queueing
+- auth
 
 ## Languages
 
