@@ -4,6 +4,7 @@ This is to bootstrap the 'site" package, which is a next.js/chakra-ui, for local
 
 ## TODO
 
+- screen captures of setup (asciinema), and working app (gif)
 - Replace lcp proxy with API routes?
 - Parametrize table type for chakra table, use for ConnZ and Messages
 - integrate dotenv (for wsurl,topic?)
