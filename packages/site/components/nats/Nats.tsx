@@ -3,6 +3,10 @@ import useInterval from '@use-it/interval'
 import { connect, JSONCodec, NatsConnection, Subscription } from 'nats.ws'
 import { Messages } from '../Messages'
 
+// This should move to a config (dotenv)
+const NATS_WS_URL = 'ws://localhost:19222'
+// const NATS_WS_URL = 'ws://192.168.86.21:19222'
+
 interface PublishProps {
   name: string
   topic?: string
@@ -47,7 +51,7 @@ export const Subscribe: FC<SubscribeProps> = ({
   topic = 'nats.demo.clock',
   maxRows = 4
 }) => {
-  function accumulatingReducer (messages: Array<{ stamp: string }>, msg: { stamp: string }): Array<{ stamp: string }> {
+  function accumulatingReducer(messages: Array<{ stamp: string }>, msg: { stamp: string }): Array<{ stamp: string }> {
     return [msg, ...messages].slice(0, maxRows)
   }
   const [messages, dispatch] = useReducer(accumulatingReducer, [])
@@ -69,11 +73,11 @@ interface useSubscribeProps {
   dispatch: React.Dispatch<{ stamp: string }>
 }
 
-function useSubscribe ({ topic, dispatch }: useSubscribeProps): void {
+function useSubscribe({ topic, dispatch }: useSubscribeProps): void {
   const { nc } = useContext(NatsContext)
   const subRef = useRef<Subscription | null>(null)
 
-  async function consumeUntilDone (sub, dispatch): Promise<void> {
+  async function consumeUntilDone(sub, dispatch): Promise<void> {
     const jc = JSONCodec()
     for await (const m of sub) {
       const msg = jc.decode(m.data)
@@ -122,14 +126,14 @@ interface NatsProviderProps {
 }
 
 export const NatsProvider: FC<NatsProviderProps> = ({
-  wsurl = 'ws://localhost:19222',
+  wsurl = NATS_WS_URL,
   name = 'unnamed',
   children
 }) => {
   const [nc, setNc] = useState<NatsConnection | null>(null)
   useEffect(() => {
     let nc
-    async function connectToNats (): Promise<void> {
+    async function connectToNats(): Promise<void> {
       console.log(`Connect to: ${name}:${wsurl}`)
       nc = await connect({
         servers: wsurl,
@@ -144,7 +148,7 @@ export const NatsProvider: FC<NatsProviderProps> = ({
     connectToNats().catch(() => { })
 
     return () => {
-      async function cleanup (): Promise<void> {
+      async function cleanup(): Promise<void> {
         console.log(`Disconnect from: ${name}:${wsurl}`)
         if (nc !== undefined && nc !== null) {
           await nc.drain()
