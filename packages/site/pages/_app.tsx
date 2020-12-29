@@ -1,5 +1,5 @@
 import { AppProps } from 'next/app'
-import Head from 'next/Head'
+import Head from 'next/head'
 import { ChakraProvider } from '@chakra-ui/react'
 
 const App = ({ Component, pageProps }: AppProps): JSX.Element => {
