@@ -51,7 +51,7 @@ export const Subscribe: FC<SubscribeProps> = ({
   topic = 'nats.demo.clock',
   maxRows = 4
 }) => {
-  function accumulatingReducer(messages: Array<{ stamp: string }>, msg: { stamp: string }): Array<{ stamp: string }> {
+  function accumulatingReducer (messages: Array<{ stamp: string }>, msg: { stamp: string }): Array<{ stamp: string }> {
     return [msg, ...messages].slice(0, maxRows)
   }
   const [messages, dispatch] = useReducer(accumulatingReducer, [])
@@ -73,11 +73,11 @@ interface useSubscribeProps {
   dispatch: React.Dispatch<{ stamp: string }>
 }
 
-function useSubscribe({ topic, dispatch }: useSubscribeProps): void {
+function useSubscribe ({ topic, dispatch }: useSubscribeProps): void {
   const { nc } = useContext(NatsContext)
   const subRef = useRef<Subscription | null>(null)
 
-  async function consumeUntilDone(sub, dispatch): Promise<void> {
+  async function consumeUntilDone (sub, dispatch): Promise<void> {
     const jc = JSONCodec()
     for await (const m of sub) {
       const msg = jc.decode(m.data)
@@ -133,7 +133,7 @@ export const NatsProvider: FC<NatsProviderProps> = ({
   const [nc, setNc] = useState<NatsConnection | null>(null)
   useEffect(() => {
     let nc
-    async function connectToNats(): Promise<void> {
+    async function connectToNats (): Promise<void> {
       console.log(`Connect to: ${name}:${wsurl}`)
       nc = await connect({
         servers: wsurl,
@@ -148,7 +148,7 @@ export const NatsProvider: FC<NatsProviderProps> = ({
     connectToNats().catch(() => { })
 
     return () => {
-      async function cleanup(): Promise<void> {
+      async function cleanup (): Promise<void> {
         console.log(`Disconnect from: ${name}:${wsurl}`)
         if (nc !== undefined && nc !== null) {
           await nc.drain()

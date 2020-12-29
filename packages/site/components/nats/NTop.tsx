@@ -9,12 +9,12 @@ import {
 import { df } from '../df'
 
 // This should move to a config (dotenv)
-const NATS_MONITORING_BASEURL = "http://localhost:18222" // without the leading '/'
+const NATS_MONITORING_BASEURL = 'http://localhost:18222' // without the leading '/'
 // const NATS_MONITORING_BASEURL = "http://192.168.86.21:18222" // without the leading '/'
 
 // - uses the local proxy to bypass cors - could use api route
 // - ?subs=1 -> get subscriptions
-export function NTop(): JSX.Element {
+export function NTop (): JSX.Element {
   return (
     <Box p={3} shadow='md' borderRadius='md' borderWidth='1px'>
       <VarZ />
@@ -23,7 +23,7 @@ export function NTop(): JSX.Element {
   )
 }
 
-function ConnZ({
+function ConnZ ({
   httpUrl = `${NATS_MONITORING_BASEURL}/connz?subs=1`,
   delay = 1000
 }): JSX.Element {
@@ -96,7 +96,7 @@ function ConnZ({
   )
 }
 
-function VarZ({
+function VarZ ({
   httpUrl = `${NATS_MONITORING_BASEURL}/varz`,
   delay = 1000
 }): JSX.Element {
@@ -152,7 +152,7 @@ function VarZ({
 }
 
 // TODO(daneroo): make value,stamp a type
-function StatWithRate({ value = 0, stamp = '' }: { value: number, stamp: string }): JSX.Element {
+function StatWithRate ({ value = 0, stamp = '' }: { value: number, stamp: string }): JSX.Element {
   const rate = useRateForMetric({ value, stamp })
   return (
     <>
@@ -164,7 +164,7 @@ function StatWithRate({ value = 0, stamp = '' }: { value: number, stamp: string 
   )
 }
 
-function useRateForMetric({ value = 0, stamp = '' }: { value: number, stamp: string }): number {
+function useRateForMetric ({ value = 0, stamp = '' }: { value: number, stamp: string }): number {
   const prevValueRef = useRef<number | null>(null)
   const prevStampRef = useRef<string | null>(null)
 
@@ -184,7 +184,7 @@ function useRateForMetric({ value = 0, stamp = '' }: { value: number, stamp: str
   return rate
 }
 
-function printSize(size: number): string {
+function printSize (size: number): string {
   if (size < 1024) {
     return size.toFixed(0)
   } else if (size < (1024 * 1024)) {

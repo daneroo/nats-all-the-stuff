@@ -9,12 +9,18 @@ The code is organized as a lerna monorepo.
 ## Usage
 
 ```bash
+## start the services
 docker-compose up -d
+
+## run the next.js app
 cd packages/site
 npm install
-npm run dev  # for live development
+npm run dev  # for live development - ctrl-C to exit
 # or
 npm run build && npm start # for production (like) build
+
+## cleanup
+docker-compose down
 ```
 
 ## Patterns
