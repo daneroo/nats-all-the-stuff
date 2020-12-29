@@ -23,6 +23,8 @@ npm run build && npm start # for production (like) build
 docker-compose down
 ```
 
+[![Usage](https://asciinema.org/a/381788.svg)](https://asciinema.org/a/381788)
+
 ## Patterns
 
 - pub/sub
